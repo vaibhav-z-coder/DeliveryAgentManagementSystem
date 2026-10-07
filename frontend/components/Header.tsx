@@ -1,16 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Truck, Plus, RefreshCw, Zap } from 'lucide-react';
+import { Truck, Plus, RefreshCw } from 'lucide-react';
 
 interface HeaderProps {
   onAddAgent: () => void;
   onRefresh: () => void;
   isRefreshing: boolean;
-  isCached?: boolean;
+  isCached?: boolean; // kept for API compatibility — used by backend, not displayed
 }
 
-export function Header({ onAddAgent, onRefresh, isRefreshing, isCached }: HeaderProps) {
+export function Header({ onAddAgent, onRefresh, isRefreshing }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -30,20 +30,6 @@ export function Header({ onAddAgent, onRefresh, isRefreshing, isCached }: Header
         </div>
 
         <div className="flex items-center gap-3">
-          {isCached !== undefined && (
-            <div
-              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                isCached
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : 'bg-amber-50 text-amber-700 border-amber-200'
-              }`}
-              title={isCached ? 'Response served from Redis Cache' : 'Response fetched fresh from PostgreSQL'}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Redis: {isCached ? 'Cache HIT' : 'Cache MISS'}</span>
-            </div>
-          )}
-
           <button
             onClick={onRefresh}
             disabled={isRefreshing}

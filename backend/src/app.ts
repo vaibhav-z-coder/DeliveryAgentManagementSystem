@@ -13,13 +13,12 @@ export function createApp(): Express {
   // Security headers
   app.use(helmet());
 
-  // CORS configuration
+  // CORS configuration — open to all origins for public API access
   app.use(
     cors({
-      origin: [env.CORS_ORIGIN, 'http://localhost:3000'],
+      origin: '*',
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-      credentials: true,
     })
   );
 
