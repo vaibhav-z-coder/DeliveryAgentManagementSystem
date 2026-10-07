@@ -1,302 +1,369 @@
-# Delivery Agent Management System (DAMS)
+# 🚚 Delivery Agent Management System (DAMS)
 
-A modern, production-grade, full-stack **Delivery Agent Management System (DAMS)** built with **Next.js**, **Node.js/Express**, **TypeScript**, **PostgreSQL (Prisma ORM)**, and **Redis Cache**.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2-black.svg?logo=next.js)](https://nextjs.org/)
+[![Express.js](https://img.shields.io/badge/Express-4.21-lightgrey.svg?logo=express)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg?logo=postgresql)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.21-2D3748.svg?logo=prisma)](https://www.prisma.io/)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D.svg?logo=redis)](https://redis.io/)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
+[![Jest](https://img.shields.io/badge/Jest-29.7-C21325.svg?logo=jest)](https://jestjs.io/)
+
+A modern, production-grade, full-stack **Delivery Agent Management System (DAMS)** designed for logistics operations, courier fleets, and delivery hubs. Built with **Next.js 14**, **Node.js/Express**, **TypeScript**, **PostgreSQL (Prisma ORM)**, and **Redis In-Memory Cache**.
 
 ---
 
 ## 📑 Table of Contents
 
-1. [Project Overview](#project-overview)
-2. [Key Features](#key-features)
-3. [Technology Stack](#technology-stack)
-4. [System Architecture](#system-architecture)
-5. [Prerequisites & Environment Variables](#prerequisites--environment-variables)
-6. [Getting Started & Setup](#getting-started--setup)
-7. [Database Setup & Migrations](#database-setup--migrations)
-8. [Redis Caching Architecture & Strategy](#redis-caching-architecture--strategy)
-9. [REST API Documentation](#rest-api-documentation)
-10. [Frontend UI & User Experience](#frontend-ui--user-experience)
-11. [Testing Suite](#testing-suite)
-12. [Project Structure](#project-structure)
-13. [Key Design & Architectural Decisions](#key-design--architectural-decisions)
+1. [Project Overview](#-project-overview)
+2. [Key Features](#-key-features)
+3. [Technology Stack](#-technology-stack)
+4. [System Architecture](#-system-architecture)
+5. [Database Schema](#-database-schema)
+6. [Redis Caching Architecture & Strategy](#-redis-caching-architecture--strategy)
+7. [Getting Started & Local Setup](#-getting-started--local-setup)
+8. [Environment Variables](#-environment-variables)
+9. [REST API Documentation](#-rest-api-documentation)
+10. [Frontend UI & User Experience](#-frontend-ui--user-experience)
+11. [Testing Suite](#-testing-suite)
+12. [Deployment Guide (Vercel & Render)](#-deployment-guide)
+13. [Project Directory Structure](#-project-directory-structure)
+14. [Troubleshooting & FAQs](#-troubleshooting--faqs)
 
 ---
 
-## 1. Project Overview
+## 🌟 Project Overview
 
-The **Delivery Agent Management System (DAMS)** is designed for logistics operators and dispatch managers to seamlessly oversee, register, inspect, update, and manage delivery agent fleets.
+The **Delivery Agent Management System (DAMS)** provides operations and dispatch teams with a centralized control plane to register, track, update, and manage delivery agent fleets.
 
-It features complete end-to-end CRUD capabilities, centralized error handling, strict runtime validation via Zod, persistent relational storage with PostgreSQL, and intelligent multi-layered response caching powered by Redis with automated cache invalidation upon any data mutation.
-
----
-
-## 2. Key Features
-
-- **Full Delivery Agent CRUD**:
-  - Register new agents with contact details, operational area, and vehicle assignment.
-  - Paginated, filterable, and searchable agent fleet directory.
-  - Granular single-agent inspection view with copyable UUIDs.
-  - In-place profile updating with pre-filled form state.
-  - One-click active/inactive status toggle switch.
-  - Safe deletion workflow protected by interactive confirmation dialogs.
-- **Enterprise-Grade Redis Caching**:
-  - High-speed caching on agent listings (`agents:list:*`) and individual lookups (`agent:{id}`).
-  - Real-time `X-Cache: HIT` / `X-Cache: MISS` telemetry.
-  - Automatic non-blocking pattern-based cache invalidation (`SCAN` / `DEL`) on agent creation, update, and deletion.
-  - Graceful degradation: Continues serving directly from PostgreSQL if Redis is offline.
-- **Robust Schema Validation**:
-  - Input validation with **Zod** across request bodies, URL params, and query strings.
-  - Client-side real-time form validation with inline feedback.
-- **Polished SaaS Dashboard**:
-  - Built with **Next.js 14**, **Tailwind CSS**, and **Lucide React**.
-  - Real-time KPI statistics cards (Total, Active, Inactive, New in last 7 days).
-  - Search by Name, Email, Phone, or Service Area with debounce.
-  - Filter by status (`ALL`, `ACTIVE`, `INACTIVE`) and sort by creation date, name, or service area.
-  - Shimmer skeleton loaders and responsive pagination.
-  - Animated toast notification system.
-- **Centralized Error Handling**:
-  - Uniform JSON error payloads (`{ success: false, error: { message, code, details } }`).
-  - Strict HTTP status code adherence (`200`, `201`, `400`, `404`, `409`, `500`).
-  - No database stack traces leaked to clients.
+### What makes it production-ready?
+- **Strict Data Validation**: Runtime validation with **Zod** on both server and client layers.
+- **Relational Integrity**: Backed by **PostgreSQL** with Prisma schema migrations and optimized indexes.
+- **Intelligent Response Caching**: Multi-level **Redis caching** on queries and aggregates with non-blocking key invalidation (`SCAN` + `DEL`).
+- **Resilient Fallback**: Graceful degradation to PostgreSQL if Redis is unreachable.
+- **Unified API Response Envelope**: Consistent response formatting and HTTP status codes (`200`, `201`, `400`, `404`, `409`, `500`).
+- **Modern User Experience**: Reactive dashboard with optimistic UI updates, debounced live search, modal workflows, and responsive layouts.
 
 ---
 
-## 3. Technology Stack
+## ⚡ Key Features
 
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **HTTP Client**: Native Fetch with custom strongly typed API client
-
-### Backend
-- **Runtime**: Node.js (v18+)
-- **Framework**: Express.js
-- **Language**: TypeScript (compiled with `tsc` / run with `tsx`)
-- **Validation**: Zod
-- **Security & Logging**: Helmet, CORS, Morgan
-
-### Database & Caching
-- **Database**: PostgreSQL 16
-- **ORM**: Prisma ORM 5
-- **In-Memory Cache**: Redis 7 (`ioredis`)
-
-### Testing & Tooling
-- **Testing**: Jest, ts-jest, Supertest
-- **Containers**: Docker & Docker Compose
+- **Full Delivery Agent Lifecycle (CRUD)**:
+  - ➕ **Register**: Add delivery agents with full name, phone number, unique email, service area, and vehicle details.
+  - 📋 **Directory**: Paginated, filterable, and searchable agent directory with customizable sorting.
+  - 🔍 **Inspect Details**: Modal drawer showing complete agent metadata, copyable UUID, timestamps, and vehicle specifications.
+  - ✏️ **Edit & Update**: Real-time form pre-filling with instant client and server validation.
+  - 🔄 **Quick Status Toggle**: Optimistic toggle between `ACTIVE` and `INACTIVE` states with immediate feedback.
+  - 🗑️ **Safe Deletion**: Two-step confirmation modal preventing accidental data loss.
+- **High-Performance Redis Caching**:
+  - Transparent HTTP response header telemetry (`X-Cache: HIT` / `X-Cache: MISS`).
+  - Cache tags: `agents:list:*` (query-indexed lists), `agent:{id}` (profile lookups), and `agents:stats` (KPI counts).
+  - Automated cache eviction on write operations (`POST`, `PUT`, `PATCH`, `DELETE`).
+- **Live Fleet KPI Analytics**:
+  - Instant dashboard cards for Total Fleet, Active Agents, Inactive Agents, and New Additions (last 7 days).
+- **Comprehensive Test Coverage**:
+  - Integration and unit tests using Jest, ts-jest, and Supertest validating all endpoints and cache invalidation.
 
 ---
 
-## 4. System Architecture
+## 🛠️ Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | [Next.js 14](https://nextjs.org/) (App Router), [React 18](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) |
+| **Backend** | [Node.js](https://nodejs.org/) (v18+), [Express.js](https://expressjs.com/), [TypeScript](https://www.typescriptlang.org/), [tsx](https://github.com/privatenumber/tsx) |
+| **Database** | [PostgreSQL 16](https://www.postgresql.org/), [Prisma ORM 5](https://www.prisma.io/) |
+| **In-Memory Cache** | [Redis 7](https://redis.io/) (`ioredis`) |
+| **Validation** | [Zod](https://zod.dev/) |
+| **Testing** | [Jest 29](https://jestjs.io/), [ts-jest](https://kulshekhar.github.io/ts-jest/), [Supertest](https://github.com/ladjs/supertest) |
+| **Containerization** | [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/) |
+
+---
+
+## 🏛️ System Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│                  Next.js 14 Frontend                    │
-│      (Responsive Dashboard, Skeletons, Modals, Toasts)  │
-└────────────────────────────┬────────────────────────────┘
-                             │
-                      REST HTTP Calls
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────┐
-│                 Express.js Backend                      │
-│     (Routes, Zod Validation, Controllers, Services)     │
-└─────────────────────┬───────────────────┬───────────────┘
-                      │                   │
-         Read / Invalidate Cache     Persistent Queries
-                      │                   │
-                      ▼                   ▼
-            ┌───────────────────┐ ┌───────────────┐
-            │   Redis 7 Cache   │ │ PostgreSQL 16 │
-            │ (agents:list,     │ │ (Prisma ORM)  │
-            │  agent:{id})      │ └───────────────┘
-            └───────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    Next.js 14 Frontend                      │
+│   (App Router, Server/Client Components, Tailwind, Lucide)  │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                       HTTP / REST API
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Express.js Backend API                    │
+│   (Routing, Zod Validation, Controllers, Agent Service)     │
+└──────────────────────┬──────────────────────┬───────────────┘
+                       │                      │
+          Read / Invalidate Cache        Database Queries
+                       │                      │
+                       ▼                      ▼
+             ┌───────────────────┐  ┌───────────────────┐
+             │   Redis 7 Cache   │  │   PostgreSQL 16   │
+             │ (Query Indexing,  │  │   (Prisma ORM,    │
+             │  SCAN eviction)   │  │   Indexed Tables) │
+             └───────────────────┘  └───────────────────┘
 ```
 
 ---
 
-## 5. Prerequisites & Environment Variables
+## 🗄️ Database Schema
 
-### Prerequisites
-- **Node.js** v18+ (tested on Node.js v22)
-- **npm** v9+
-- **Docker & Docker Compose** (for PostgreSQL and Redis containers)
+Defined in `backend/prisma/schema.prisma` and mapped to the PostgreSQL table `agents`:
 
-### Environment Configuration
+```prisma
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+}
 
-The application includes `.env.example` templates in the root, `backend/`, and `frontend/` directories.
+model Agent {
+  id            String      @id @default(uuid())
+  fullName      String
+  phone         String
+  email         String      @unique
+  serviceArea   String
+  status        AgentStatus @default(ACTIVE)
+  vehicleType   String?     // e.g., Bike, Scooter, Electric Scooter, Van
+  vehicleNumber String?     // e.g., KA-01-AB-1234
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-#### Backend (`backend/.env`)
-```env
-PORT=5050
-NODE_ENV=development
-DATABASE_URL=postgresql://dams_user:dams_password@localhost:5432/dams_db?schema=public
-REDIS_URL=redis://localhost:6379
-REDIS_TTL=60
-CORS_ORIGIN=http://localhost:3000
+  @@index([status])
+  @@index([serviceArea])
+  @@index([createdAt])
+  @@map("agents")
+}
 ```
 
-#### Frontend (`frontend/.env.local`)
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5050/api
-```
+### Database Indexes
+- `email`: Unique index preventing duplicate registrations.
+- `status`: B-tree index optimizing fleet status filtering (`ACTIVE` vs `INACTIVE`).
+- `serviceArea`: B-tree index optimizing geographical lookups.
+- `createdAt`: B-tree index supporting default reverse-chronological sorting.
 
 ---
 
-## 6. Getting Started & Setup
+## 🚀 Redis Caching Architecture & Strategy
 
-### Step 1: Clone Repository & Navigate
-```bash
-git clone <repo-url>
-cd PrepPro
-```
+Redis functions as a high-speed read cache positioned in front of PostgreSQL.
 
-### Step 2: Start Infrastructure (PostgreSQL & Redis)
-Use Docker Compose to launch both PostgreSQL and Redis with health checks:
-```bash
-docker compose up -d
-```
-To verify containers are running:
-```bash
-docker compose ps
-```
-
-### Step 3: Install Dependencies
-Install dependencies for both backend and frontend:
-```bash
-npm run install:all
-```
-*(Or navigate to `backend` and `frontend` separately and run `npm install`)*
-
----
-
-## 7. Database Setup & Migrations
-
-### Apply Migrations
-Generate the Prisma Client and apply migrations to PostgreSQL:
-```bash
-npm run db:migrate
-```
-*(Or inside `backend/`: `npx prisma migrate dev`)*
-
-### Seed Initial Sample Agents
-Populate the database with 12 realistic delivery agents across various regions:
-```bash
-npm run db:seed
-```
-*(Or inside `backend/`: `npm run prisma:seed`)*
-
----
-
-## 8. Redis Caching Architecture & Strategy
-
-Redis is actively utilized for read optimization and response caching.
-
-### Cache Keys & Hierarchy
+### Key Naming Conventions
 
 | Key Pattern | Description | TTL | Invalidation Triggers |
 | :--- | :--- | :--- | :--- |
-| `agents:list:*` | Query-indexed agent list cache (e.g. `agents:list:limit=10:page=1:search=rahul:sortBy=createdAt:sortOrder=desc`) | 60 seconds (configurable) | Created, Updated, Deleted, Status Toggled |
-| `agent:{id}` | Single agent profile by UUID | 60 seconds (configurable) | Updated, Deleted, Status Toggled |
-| `agents:stats` | Fleet analytics (totals, active count, 7-day additions) | 60 seconds | Created, Updated, Deleted, Status Toggled |
+| `agents:list:*` | Query-indexed list caches with hashed filters (e.g., `agents:list:limit=10:page=1:search=rahul:sortBy=createdAt:sortOrder=desc`) | 60s | Agent Created, Updated, Deleted, Status Toggled |
+| `agent:{id}` | Single agent profile cache by UUID | 60s | Agent Updated, Deleted, Status Toggled |
+| `agents:stats` | Fleet analytics (Total, Active, Inactive, 7-day delta) | 60s | Agent Created, Updated, Deleted, Status Toggled |
 
 ### Cache Flow Diagram
 
 ```text
-Incoming GET /api/agents
-       │
-       ▼
-Is Redis connected?
- ├── NO ──────► Fetch directly from PostgreSQL ──► Return X-Cache: MISS
- └── YES
-      │
-      ▼
-Check key: agents:list:...
- ├── Key EXISTS (HIT) ─► Return JSON data + HTTP Header [X-Cache: HIT]
- └── Key MISS
-      │
-      ▼
-Fetch from PostgreSQL (Prisma $transaction)
-      │
-      ▼
-Write payload to Redis with TTL (EX 60s)
-      │
-      ▼
-Return JSON data + HTTP Header [X-Cache: MISS]
+Incoming Request: GET /api/agents?page=1&limit=10
+                       │
+                       ▼
+             Is Redis Connected?
+            ├── NO ──► Fetch directly from PostgreSQL ──► Response [X-Cache: MISS]
+            └── YES
+                 │
+                 ▼
+          Check Redis Key: agents:list:...
+         ├── HIT  ──► Return Cached JSON ──────────────► Response [X-Cache: HIT]
+         └── MISS
+              │
+              ▼
+         Fetch from PostgreSQL via Prisma
+              │
+              ▼
+         Store in Redis with 60s TTL
+              │
+              ▼
+         Return Fresh JSON ─────────────────────────────► Response [X-Cache: MISS]
 ```
 
-### Invalidation Strategy
-When any write operation occurs (`POST /api/agents`, `PUT /api/agents/:id`, `PATCH /api/agents/:id/status`, `DELETE /api/agents/:id`):
-1. The PostgreSQL mutation completes inside a safe database transaction.
-2. The service executes non-blocking `SCAN` iteration matching `agents:list*` and removes all list key variants using pipelined `DEL`.
-3. The specific entity key `agent:{id}` is removed.
-4. The fleet aggregate key `agents:stats` is removed.
-5. All subsequent requests fetch fresh data from PostgreSQL and re-warm the cache.
+### Non-Blocking Cache Invalidation
+When an agent is created, modified, or deleted:
+1. The PostgreSQL transaction completes successfully.
+2. The backend initiates a non-blocking `SCAN` iteration matching `agents:list*`.
+3. Matched list keys are evicted in a pipelined batch using `DEL`.
+4. The entity key `agent:{id}` and analytics key `agents:stats` are cleared.
+5. Next read queries repopulate Redis transparently.
 
 ---
 
-## 9. REST API Documentation
+## ⚙️ Getting Started & Local Setup
+
+### Prerequisites
+- **Node.js** v18+ (tested on Node v20/v22)
+- **npm** v9+
+- **Docker & Docker Compose** (for automated PostgreSQL & Redis setup)
+
+---
+
+### Method A: Quick Start with Docker (Recommended)
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/vaibhav-z-coder/DeliveryAgentManagementSystem.git
+   cd DeliveryAgentManagementSystem
+   ```
+
+2. **Start PostgreSQL & Redis containers**:
+   ```bash
+   docker compose up -d
+   ```
+   *Verify running containers*: `docker compose ps`
+
+3. **Install dependencies for root, backend, and frontend**:
+   ```bash
+   npm run install:all
+   ```
+
+4. **Set up backend environment variables**:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+
+5. **Run database migrations and seed data**:
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+6. **Set up frontend environment variables**:
+   ```bash
+   cp frontend/.env.example frontend/.env.local
+   ```
+
+7. **Start both development servers**:
+   In terminal 1 (Backend):
+   ```bash
+   npm run dev:backend
+   ```
+   In terminal 2 (Frontend):
+   ```bash
+   npm run dev:frontend
+   ```
+
+8. **Open in browser**:
+   - **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
+   - **Backend API**: [http://localhost:5050/api](http://localhost:5050/api)
+   - **Health Check**: [http://localhost:5050/api/health](http://localhost:5050/api/health)
+
+---
+
+### Method B: Manual Setup (Existing PostgreSQL & Redis)
+
+If you already have PostgreSQL and Redis installed locally or hosted in the cloud:
+
+1. Update `backend/.env` with your connection strings:
+   ```env
+   DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database>?schema=public"
+   REDIS_URL="redis://<user>:<password>@<host>:<port>"
+   ```
+2. Navigate to `backend`:
+   ```bash
+   cd backend
+   npm install
+   npx prisma migrate dev
+   npx tsx prisma/seed.ts
+   npm run dev
+   ```
+3. In another terminal, navigate to `frontend`:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+---
+
+## 🔐 Environment Variables
+
+### Root / Backend (`backend/.env`)
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `PORT` | `5050` | Port for Express API server |
+| `NODE_ENV` | `development` | Runtime environment (`development` / `production`) |
+| `DATABASE_URL` | `postgresql://dams_user:dams_password@localhost:5432/dams_db?schema=public` | PostgreSQL connection string |
+| `REDIS_URL` | `redis://localhost:6379` | Redis connection string |
+| `REDIS_TTL` | `60` | Cache time-to-live in seconds |
+| `CORS_ORIGIN` | `http://localhost:3000` | Allowed origin for CORS (comma-separated or single) |
+
+### Frontend (`frontend/.env.local`)
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:5050/api` | Base URL for backend REST API |
+
+---
+
+## 📡 REST API Documentation
 
 Base URL: `http://localhost:5050/api`
 
-### Health Check
-- **`GET /api/health`**
-  - **Status Code**: `200 OK` (or `503 Service Unavailable` if DB down)
-  - **Response**:
-    ```json
-    {
-      "success": true,
-      "status": "healthy",
-      "message": "API is healthy",
-      "services": {
-        "database": "connected",
-        "redis": "connected"
-      },
-      "uptime": 120.4,
-      "timestamp": "2026-10-07T12:00:00.000Z"
-    }
-    ```
+### 1. Health Check
+Checks connectivity for database and Redis services.
 
-### Fleet Statistics
-- **`GET /api/agents/stats`**
-  - **Status Code**: `200 OK`
-  - **Headers**: `X-Cache: HIT` or `X-Cache: MISS`
-  - **Response**:
-    ```json
-    {
-      "success": true,
-      "data": {
-        "total": 12,
-        "active": 9,
-        "inactive": 3,
-        "recentlyAdded": 12,
-        "recentAgents": [...]
-      },
-      "cached": true
-    }
-    ```
+- **Endpoint**: `GET /api/health`
+- **Response** (`200 OK`):
+  ```json
+  {
+    "success": true,
+    "status": "healthy",
+    "message": "API is healthy",
+    "services": {
+      "database": "connected",
+      "redis": "connected"
+    },
+    "uptime": 240.5,
+    "timestamp": "2026-10-07T14:30:00.000Z"
+  }
+  ```
 
-### Create Agent
-- **`POST /api/agents`**
-  - **Status Code**: `201 Created`
-  - **Request Body**:
-    ```json
-    {
-      "fullName": "Rahul Sharma",
-      "phone": "+91 98765 43210",
-      "email": "rahul.sharma@example.com",
-      "serviceArea": "Indiranagar, Bangalore",
-      "status": "ACTIVE",
-      "vehicleType": "Electric Scooter (Ather 450X)",
-      "vehicleNumber": "KA-01-EQ-1029"
-    }
-    ```
-  - **Success Response**:
-    ```json
-    {
-      "success": true,
-      "data": {
+---
+
+### 2. Fleet Analytics / Stats
+Fetches fleet totals and status distribution (cached).
+
+- **Endpoint**: `GET /api/agents/stats`
+- **Response Headers**: `X-Cache: HIT` or `X-Cache: MISS`
+- **Response** (`200 OK`):
+  ```json
+  {
+    "success": true,
+    "data": {
+      "total": 12,
+      "active": 9,
+      "inactive": 3,
+      "recentlyAdded": 12
+    },
+    "cached": true
+  }
+  ```
+
+---
+
+### 3. List Delivery Agents
+Returns a paginated list of delivery agents with optional filters.
+
+- **Endpoint**: `GET /api/agents`
+- **Query Parameters**:
+  - `page` *(number, default: 1)*
+  - `limit` *(number, default: 10, max: 100)*
+  - `status` *(string, optional: `ACTIVE` | `INACTIVE`)*
+  - `search` *(string, optional: matches name, email, phone, service area)*
+  - `sortBy` *(string, default: `createdAt` - options: `fullName`, `createdAt`, `serviceArea`, `status`)*
+  - `sortOrder` *(string, default: `desc` - options: `asc` | `desc`)*
+- **Response Headers**: `X-Cache: HIT` or `X-Cache: MISS`
+- **Response** (`200 OK`):
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
         "id": "e79c1a54-2719-47af-976d-dd59e9f71dca",
         "fullName": "Rahul Sharma",
         "phone": "+91 98765 43210",
@@ -308,205 +375,359 @@ Base URL: `http://localhost:5050/api`
         "createdAt": "2026-10-07T12:00:00.000Z",
         "updatedAt": "2026-10-07T12:00:00.000Z"
       }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 12,
+      "totalPages": 2,
+      "hasNextPage": true,
+      "hasPrevPage": false
+    },
+    "cached": false
+  }
+  ```
+
+---
+
+### 4. Create Delivery Agent
+Registers a new delivery agent. Automatically evicts cached lists and stats.
+
+- **Endpoint**: `POST /api/agents`
+- **Headers**: `Content-Type: application/json`
+- **Request Body**:
+  ```json
+  {
+    "fullName": "Priya Nair",
+    "phone": "+91 98123 45678",
+    "email": "priya.nair@example.com",
+    "serviceArea": "Koramangala, Bangalore",
+    "status": "ACTIVE",
+    "vehicleType": "Motorcycle (Hero Splendor)",
+    "vehicleNumber": "KA-05-JK-4412"
+  }
+  ```
+- **Response** (`201 Created`):
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "4b689a77-3e11-4a25-8cb5-1205391a329e",
+      "fullName": "Priya Nair",
+      "phone": "+91 98123 45678",
+      "email": "priya.nair@example.com",
+      "serviceArea": "Koramangala, Bangalore",
+      "status": "ACTIVE",
+      "vehicleType": "Motorcycle (Hero Splendor)",
+      "vehicleNumber": "KA-05-JK-4412",
+      "createdAt": "2026-10-07T14:32:10.000Z",
+      "updatedAt": "2026-10-07T14:32:10.000Z"
     }
-    ```
-  - **Error Responses**:
-    - `400 Bad Request`: Validation failure (e.g., invalid email, missing required fields).
-    - `409 Conflict`: Email address already registered.
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Validation error (invalid email format, empty fields).
+  - `409 Conflict`: An agent with this email already exists.
 
-### List Agents
-- **`GET /api/agents`**
-  - **Query Parameters**:
-    - `page` *(number, optional, default: 1)*
-    - `limit` *(number, optional, default: 10, max: 100)*
-    - `status` *(string, optional: `ACTIVE` or `INACTIVE`)*
-    - `search` *(string, optional: matches name, email, phone, or serviceArea)*
-    - `sortBy` *(string, optional: `createdAt`, `fullName`, `serviceArea`, `status`)*
-    - `sortOrder` *(string, optional: `asc` or `desc`)*
-  - **Status Code**: `200 OK`
-  - **Headers**: `X-Cache: HIT` or `X-Cache: MISS`
-  - **Response**:
-    ```json
-    {
-      "success": true,
-      "data": [...],
-      "pagination": {
-        "page": 1,
-        "limit": 10,
-        "total": 12,
-        "totalPages": 2,
-        "hasNextPage": true,
-        "hasPrevPage": false
-      },
-      "cached": true
+---
+
+### 5. Get Agent by ID
+Retrieves details of an individual agent.
+
+- **Endpoint**: `GET /api/agents/:id`
+- **Response** (`200 OK`):
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "4b689a77-3e11-4a25-8cb5-1205391a329e",
+      "fullName": "Priya Nair",
+      "phone": "+91 98123 45678",
+      "email": "priya.nair@example.com",
+      "serviceArea": "Koramangala, Bangalore",
+      "status": "ACTIVE",
+      "vehicleType": "Motorcycle (Hero Splendor)",
+      "vehicleNumber": "KA-05-JK-4412",
+      "createdAt": "2026-10-07T14:32:10.000Z",
+      "updatedAt": "2026-10-07T14:32:10.000Z"
+    },
+    "cached": true
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Invalid UUID format.
+  - `404 Not Found`: Agent not found.
+
+---
+
+### 6. Update Agent Details
+Updates profile fields. Automatically evicts the agent's cache key and all list caches.
+
+- **Endpoint**: `PUT /api/agents/:id`
+- **Request Body** *(all fields optional)*:
+  ```json
+  {
+    "fullName": "Priya K. Nair",
+    "serviceArea": "HSR Layout, Bangalore"
+  }
+  ```
+- **Response** (`200 OK`):
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "4b689a77-3e11-4a25-8cb5-1205391a329e",
+      "fullName": "Priya K. Nair",
+      "phone": "+91 98123 45678",
+      "email": "priya.nair@example.com",
+      "serviceArea": "HSR Layout, Bangalore",
+      "status": "ACTIVE",
+      "vehicleType": "Motorcycle (Hero Splendor)",
+      "vehicleNumber": "KA-05-JK-4412",
+      "createdAt": "2026-10-07T14:32:10.000Z",
+      "updatedAt": "2026-10-07T14:35:40.000Z"
     }
-    ```
+  }
+  ```
 
-### Get Single Agent
-- **`GET /api/agents/:id`**
-  - **Status Code**: `200 OK`
-  - **Headers**: `X-Cache: HIT` or `X-Cache: MISS`
-  - **Error Responses**:
-    - `400 Bad Request`: If `:id` is not a valid UUID.
-    - `404 Not Found`: If agent does not exist.
+---
 
-### Update Agent
-- **`PUT /api/agents/:id`**
-  - **Status Code**: `200 OK`
-  - **Request Body** *(all fields optional)*:
-    ```json
-    {
-      "fullName": "Rahul Kumar Sharma",
-      "phone": "+91 98765 00000",
-      "serviceArea": "Koramangala, Bangalore"
-    }
-    ```
-  - **Error Responses**:
-    - `400 Bad Request`: Validation failure.
-    - `404 Not Found`: Agent ID not found.
-    - `409 Conflict`: New email already belongs to another agent.
+### 7. Toggle Agent Status
+Quick status modification (`ACTIVE` ↔ `INACTIVE`).
 
-### Toggle Status
-- **`PATCH /api/agents/:id/status`**
-  - **Status Code**: `200 OK`
-  - **Request Body**:
-    ```json
-    {
+- **Endpoint**: `PATCH /api/agents/:id/status`
+- **Request Body**:
+  ```json
+  {
+    "status": "INACTIVE"
+  }
+  ```
+- **Response** (`200 OK`):
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "4b689a77-3e11-4a25-8cb5-1205391a329e",
       "status": "INACTIVE"
     }
-    ```
+  }
+  ```
 
-### Delete Agent
-- **`DELETE /api/agents/:id`**
-  - **Status Code**: `200 OK`
-  - **Success Response**:
-    ```json
-    {
-      "success": true,
-      "data": {
-        "id": "e79c1a54-2719-47af-976d-dd59e9f71dca",
-        "message": "Delivery agent successfully deleted"
-      }
+---
+
+### 8. Delete Delivery Agent
+Permanently removes an agent and purges all relevant cache keys.
+
+- **Endpoint**: `DELETE /api/agents/:id`
+- **Response** (`200 OK`):
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "4b689a77-3e11-4a25-8cb5-1205391a329e",
+      "message": "Delivery agent successfully deleted"
     }
-    ```
-  - **Error Responses**:
-    - `404 Not Found`: Agent does not exist.
+  }
+  ```
 
 ---
 
-## 10. Frontend UI & User Experience
+## 💻 Frontend UI & User Experience
 
-- **Live URL**: `http://localhost:3000`
-- **Dashboard Features**:
-  - **Fleet KPI Metrics**: Instant overview of Total Fleet, Active Count, Inactive Count, and Recent Additions.
-  - **Real-Time Redis Cache Indicator**: Dynamic pill badge in header showing `Redis: Cache HIT` (green) vs `Redis: Cache MISS` (amber).
-  - **Fast Interactive Filtering**: Search by name, phone, email, or area with 300ms debounce.
-  - **Instant Status Toggle**: Toggle an agent's active status directly from table rows with optimistic UI updates.
-  - **Safe Deletion Dialog**: Prevents accidental data destruction with explicit agent identity confirmation.
-  - **Interactive Details Drawer**: Full inspection view with 1-click UUID copying, registration timestamps, and vehicle specifications.
-  - **Accessible Toast Notifications**: Non-intrusive feedback on creation, update, deletion, and network status.
+The frontend is crafted for efficiency and clarity:
+
+- **Fleet Overview**: Top KPI cards displaying Total Fleet, Active, Inactive, and 7-day velocity.
+- **Debounced Instant Search**: 300ms debounce across Name, Email, Phone, and Service Area.
+- **Sorting & Filtering**: Instant filter by status (`ALL`, `ACTIVE`, `INACTIVE`) and sort order.
+- **Optimistic Status Toggling**: Click to toggle active state instantly; gracefully rolls back if network fails.
+- **Accessible Modals & Drawers**:
+  - `AgentModal`: Handles Add and Edit operations with live client validation.
+  - `AgentDetailModal`: Slide-over card for full inspection with one-click UUID copy.
+  - `DeleteConfirmModal`: Confirmation safeguard with agent name confirmation.
+- **Feedback & Feedback States**: Shimmer skeleton table loading states and animated toast alerts.
 
 ---
 
-## 11. Testing Suite
+## 🧪 Testing Suite
 
-The backend includes a comprehensive Jest and Supertest test suite validating all REST endpoints, Zod schema validation, Prisma persistence, Redis cache hits/misses, and cache invalidation.
+The backend includes a comprehensive Jest test suite running against real or test database instances and Redis:
 
-To run the backend test suite:
 ```bash
+# Run backend test suite
 npm run test:backend
-```
-*(Or inside `backend/`: `npm test`)*
 
-### Test Coverage Highlights:
-- `POST /api/agents`: Valid creation, missing fields (400), invalid email (400), duplicate email (409).
-- `GET /api/agents`: Cache miss on first call, Cache hit on repeat call, search filter, status filter, pagination.
-- `GET /api/agents/:id`: Cache miss/hit behavior, non-existent UUID (404), invalid UUID format (400).
-- `PUT /api/agents/:id`: Update execution, cache invalidation verification on list and item keys.
-- `PATCH /api/agents/:id/status`: Status toggling and cache invalidation.
-- `DELETE /api/agents/:id`: Successful deletion and cache eviction.
-- `GET /api/health`: Database and Redis connection health diagnostics.
+# Or directly in backend directory
+cd backend && npm test
+```
+
+### Key Scenarios Tested
+- ✅ `POST /api/agents`: Valid creation, validation rejection (400), duplicate email rejection (409).
+- ✅ `GET /api/agents`: Cache miss on initial query, cache hit on immediate repeat query.
+- ✅ `GET /api/agents?search=...`: Accurate filter execution.
+- ✅ `GET /api/agents/:id`: Individual lookup, cache behavior, 404 for missing IDs, 400 for malformed UUIDs.
+- ✅ `PUT /api/agents/:id`: Field update and automatic cache invalidation confirmation.
+- ✅ `PATCH /api/agents/:id/status`: Status toggling and cache invalidation.
+- ✅ `DELETE /api/agents/:id`: Deletion and removal from cache and database.
+- ✅ `GET /api/health`: Health status checks.
 
 ---
 
-## 12. Project Structure
+## 🌐 Deployment Guide
+
+### Architecture for Cloud Production
+
+| Component | Recommended Platform | Alternative |
+| :--- | :--- | :--- |
+| **Frontend** | [Vercel](https://vercel.com/) | Cloudflare Pages, Netlify |
+| **Backend API** | [Render](https://render.com/) | Railway, Fly.io, AWS ECS |
+| **PostgreSQL** | [Neon](https://neon.tech/) / [Supabase](https://supabase.com/) | Render Managed PostgreSQL |
+| **Redis** | [Upstash Redis](https://upstash.com/) | Render Managed Redis |
+
+---
+
+### Step 1: Deploy PostgreSQL & Redis
+
+1. Create a PostgreSQL database on **Neon** or **Render**. Note your `DATABASE_URL`.
+2. Create a Redis instance on **Upstash** (free tier available) or **Render**. Note your `REDIS_URL`.
+
+---
+
+### Step 2: Deploy Backend on Render
+
+1. Sign in to [Render](https://dashboard.render.com/) and click **New +** > **Web Service**.
+2. Connect your GitHub repository: `vaibhav-z-coder/DeliveryAgentManagementSystem`.
+3. Configure the settings:
+   - **Root Directory**: `backend`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install && npx prisma generate && npm run build`
+   - **Start Command**: `npm run start`
+4. Add the following **Environment Variables** in Render:
+   - `PORT`: `5050`
+   - `NODE_ENV`: `production`
+   - `DATABASE_URL`: *(Your production PostgreSQL connection string)*
+   - `REDIS_URL`: *(Your production Redis connection string)*
+   - `REDIS_TTL`: `60`
+   - `CORS_ORIGIN`: `https://your-frontend-app.vercel.app` *(or `*` temporarily)*
+5. Trigger initial migration & seed (via Render Shell or local connection):
+   ```bash
+   npx prisma migrate deploy
+   ```
+6. Your backend will be live at `https://your-backend.onrender.com`. Test health at `https://your-backend.onrender.com/api/health`.
+
+---
+
+### Step 3: Deploy Frontend on Vercel
+
+1. Sign in to [Vercel](https://vercel.com/) and click **Add New...** > **Project**.
+2. Import the `DeliveryAgentManagementSystem` repository.
+3. In **Project Configuration**:
+   - **Framework Preset**: `Next.js`
+   - **Root Directory**: Click `Edit` and select `frontend`.
+4. Add Environment Variable:
+   - `NEXT_PUBLIC_API_URL`: `https://your-backend.onrender.com/api`
+5. Click **Deploy**. Vercel will build and assign your production domain.
+6. Remember to update the `CORS_ORIGIN` in Render with your actual Vercel domain!
+
+---
+
+## 📁 Project Directory Structure
 
 ```text
-PrepPro/
-├── docker-compose.yml           # PostgreSQL 16 & Redis 7 container specifications
-├── package.json                 # Monorepo management scripts
-├── README.md                    # Detailed documentation
-├── .gitignore                   # Multi-tier git ignore rules
-├── .env.example                 # Root environment variables guide
+DeliveryAgentManagementSystem/
+├── docker-compose.yml           # PostgreSQL 16 & Redis 7 Docker configuration
+├── package.json                 # Monorepo orchestration scripts
+├── README.md                    # Project documentation
+├── .gitignore                   # Multi-tier ignore rules
+├── .env.example                 # Root environment variable template
 │
 ├── backend/
 │   ├── src/
-│   │   ├── config/              # Prisma, Redis, and Environment loaders
+│   │   ├── config/              # Prisma client, Redis client, env validator
 │   │   │   ├── env.ts
 │   │   │   ├── prisma.ts
 │   │   │   └── redis.ts
-│   │   ├── cache/               # Redis query indexing & SCAN invalidation logic
+│   │   ├── cache/               # Redis key generation & SCAN invalidation
 │   │   │   └── agentCache.ts
-│   │   ├── controllers/         # Express endpoint request handlers
+│   │   ├── controllers/         # Request handling & HTTP status codes
 │   │   │   └── agentController.ts
-│   │   ├── middleware/          # Central error handler, 404, Zod validator
+│   │   ├── middleware/          # Centralized error handler & Zod validation
 │   │   │   ├── errorHandler.ts
 │   │   │   └── validateRequest.ts
-│   │   ├── routes/              # Express route declarations
+│   │   ├── routes/              # Express API route bindings
 │   │   │   ├── agentRoutes.ts
 │   │   │   └── healthRoutes.ts
-│   │   ├── services/            # Core business logic and database queries
+│   │   ├── services/            # Business logic & DB transactions
 │   │   │   └── agentService.ts
-│   │   ├── utils/               # Response formatters and custom errors
+│   │   ├── utils/               # Custom AppError & standardized response helper
 │   │   │   ├── apiResponse.ts
 │   │   │   └── errors.ts
-│   │   ├── validators/          # Zod validation schemas
+│   │   ├── validators/          # Zod schemas for body, params, query
 │   │   │   └── agentValidator.ts
-│   │   ├── app.ts               # Express app instance & middlewares
-│   │   └── server.ts            # Server bootstrap and graceful shutdown
+│   │   ├── app.ts               # Express configuration, Helmet, CORS, Morgan
+│   │   └── server.ts            # HTTP server startup & graceful shutdown
 │   ├── prisma/
-│   │   ├── schema.prisma        # PostgreSQL Agent model & indexes
-│   │   ├── migrations/          # Applied migrations
-│   │   └── seed.ts              # 12 sample delivery agents seed script
+│   │   ├── schema.prisma        # Database model and indexes
+│   │   ├── migrations/          # Version-controlled migrations
+│   │   └── seed.ts              # 12 realistic sample agents
 │   ├── tests/
 │   │   └── agent.test.ts        # Comprehensive Supertest suite
 │   ├── jest.config.js
 │   ├── tsconfig.json
 │   ├── package.json
-│   └── .env
+│   └── .env.example
 │
 └── frontend/
     ├── app/
-    │   ├── globals.css          # Tailwind CSS base styles and animations
-    │   ├── layout.tsx           # HTML Root layout & SEO meta
-    │   └── page.tsx             # Main dashboard page with full state logic
+    │   ├── globals.css          # Tailwind CSS styles & animations
+    │   ├── layout.tsx           # Global HTML shell & meta configuration
+    │   └── page.tsx             # Main dashboard controller & state manager
     ├── components/
-    │   ├── Header.tsx           # Navigation bar with Redis cache badge
+    │   ├── Header.tsx           # Navigation bar with action buttons
     │   ├── StatsOverview.tsx    # Fleet KPI statistics cards
-    │   ├── AgentTable.tsx       # Fleet directory table with actions
-    │   ├── AgentModal.tsx       # Add / Edit form modal with live validation
-    │   ├── AgentDetailModal.tsx # Inspection view with copyable UUID
-    │   ├── DeleteConfirmModal.tsx # Delete confirmation dialog
-    │   ├── Pagination.tsx       # Responsive page navigation
-    │   ├── SkeletonTable.tsx    # Shimmer loading skeleton
-    │   └── Toast.tsx            # Toast notification container
+    │   ├── AgentTable.tsx       # Interactive agent list table
+    │   ├── AgentModal.tsx       # Create / Edit modal with real-time validation
+    │   ├── AgentDetailModal.tsx # Side drawer for inspecting single agent
+    │   ├── DeleteConfirmModal.tsx # Safe two-step deletion confirmation
+    │   ├── Pagination.tsx       # Responsive pagination controller
+    │   ├── SkeletonTable.tsx    # Shimmer table loader
+    │   └── Toast.tsx            # Floating toast notification system
     ├── lib/
-    │   └── api.ts               # Strongly typed API client
+    │   └── api.ts               # Strongly typed API client wrapper
     ├── types/
-    │   └── agent.ts             # Shared frontend TypeScript interfaces
+    │   └── agent.ts             # TypeScript definitions
     ├── tailwind.config.js
     ├── next.config.js
     ├── tsconfig.json
     ├── package.json
-    └── .env.local
+    └── .env.example
 ```
 
 ---
 
-## 13. Key Design & Architectural Decisions
+## ❓ Troubleshooting & FAQs
 
-1. **Separation of Concerns**: Strict decoupling across Controllers (HTTP translation), Services (business logic & cache orchestration), Validators (Zod rules), and Cache layer.
-2. **Resilient Redis Fallback**: If Redis becomes temporarily unreachable, the application logs a warning and automatically falls back to PostgreSQL without throwing 500 errors to the user.
-3. **Non-blocking Cache Invalidation**: Used `redis.scan` with `MATCH` instead of `redis.keys` to safely evict query-variant list keys without causing blocking latency spikes in Redis.
-4. **Optimistic UI Updates**: Toggling an agent's active status on the frontend updates state immediately for zero perceived latency, and rolls back with an error notification if the backend rejects the change.
-5. **Standardized JSON Envelope**: All API endpoints return a standardized structure with `{ success: true, data, pagination, cached }` or `{ success: false, error: { message, code } }`.
+### 1. `relation "Agent" does not exist`
+In the Prisma schema, the model `Agent` is mapped to the table `"agents"` (`@@map("agents")`).
+When running direct SQL queries in PostgreSQL:
+```sql
+-- Correct:
+SELECT * FROM "agents" ORDER BY "createdAt" DESC;
+
+-- Avoid:
+SELECT * FROM "Agent";
+```
+
+### 2. Can the app run without Redis?
+Yes! The backend includes a graceful fallback mechanism. If Redis is unavailable or down, read queries automatically bypass the cache and fetch directly from PostgreSQL, and write mutations succeed without crashing.
+
+### 3. Vercel deployment asks for Root Directory
+Because this is a monorepo containing both `backend/` and `frontend/`:
+- In **Vercel**, set the Root Directory to **`frontend`**.
+- In **Render**, create a Web Service and set the Root Directory to **`backend`**.
+- Set `NEXT_PUBLIC_API_URL` on Vercel to your deployed Render URL.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
