@@ -1,0 +1,31 @@
+{
+  "name": "delivery-agent-management-system",
+  "version": "1.0.0",
+  "description": "Production-ready Full-Stack Delivery Agent Management System (DAMS) with Next.js, Express, PostgreSQL, Prisma, and Redis",
+  "scripts": {
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "db:migrate": "npm --prefix backend run prisma:migrate",
+    "db:generate": "npm --prefix backend run prisma:generate",
+    "db:seed": "npm --prefix backend run prisma:seed",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "test:backend": "npm --prefix backend run test"
+  },
+  "keywords": [
+    "delivery-agent",
+    "management-system",
+    "nextjs",
+    "express",
+    "prisma",
+    "postgresql",
+    "redis",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT"
+}
