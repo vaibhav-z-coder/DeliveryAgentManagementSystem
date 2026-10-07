@@ -1,0 +1,79 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    name: Backend Tests & Frontend Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: dams_user
+          POSTGRES_PASSWORD: dams_password
+          POSTGRES_DB: dams_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm --prefix backend install
+          npm --prefix frontend install
+
+      - name: Run Prisma Generate & Migrations
+        env:
+          DATABASE_URL: postgresql://dams_user:dams_password@localhost:5432/dams_db?schema=public
+        run: |
+          cd backend
+          npx prisma generate
+          npx prisma migrate deploy
+
+      - name: Run Backend Test Suite (Jest + Supertest)
+        env:
+          DATABASE_URL: postgresql://dams_user:dams_password@localhost:5432/dams_db?schema=public
+          REDIS_URL: redis://localhost:6379
+          REDIS_TTL: 60
+          PORT: 5050
+          NODE_ENV: test
+          CORS_ORIGIN: http://localhost:3000
+        run: |
+          cd backend
+          npm test
+
+      - name: Build Frontend (Next.js)
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5050/api
+        run: |
+          cd frontend
+          npm run build
